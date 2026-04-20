@@ -157,6 +157,16 @@ const Reservas = () => {
           </Dialog>
         </div>
 
+        {formClosed && (
+          <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+            <Lock className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-destructive">Formulario de reservas cerrado</p>
+              <p className="text-xs text-destructive/80">Las nuevas reservas están deshabilitadas hasta nuevo aviso. Puedes reactivarlo desde el módulo de Bloqueos.</p>
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
