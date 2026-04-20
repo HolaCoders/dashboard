@@ -260,17 +260,38 @@ const Bloqueos = () => {
           )}
         </div>
 
+        {isAdmin && (
+          <Card className={formClosed ? "border-destructive bg-destructive/5" : ""}>
+            <CardContent className="pt-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${formClosed ? "bg-destructive text-destructive-foreground" : "bg-muted"}`}>
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Cerrar formulario de reservas hasta nuevo aviso</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formClosed
+                      ? "Los clientes no podrán crear nuevas reservas."
+                      : "Activa esta opción para detener todas las nuevas reservas."}
+                  </p>
+                </div>
+              </div>
+              <Switch checked={formClosed} onCheckedChange={toggleFormClosed} />
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card><CardContent className="pt-6 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center"><Clock className="h-5 w-5 text-blue-700" /></div>
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><Clock className="h-5 w-5 text-primary" /></div>
             <div><p className="text-xs text-muted-foreground">Horarios bloqueados</p><p className="text-2xl font-bold">{filterByType("horario").length}</p></div>
           </CardContent></Card>
           <Card><CardContent className="pt-6 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-red-100 flex items-center justify-center"><CalendarIcon className="h-5 w-5 text-red-700" /></div>
+            <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center"><CalendarIcon className="h-5 w-5 text-destructive" /></div>
             <div><p className="text-xs text-muted-foreground">Días cerrados</p><p className="text-2xl font-bold">{filterByType("dia").length}</p></div>
           </CardContent></Card>
           <Card><CardContent className="pt-6 flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center"><Users className="h-5 w-5 text-amber-700" /></div>
+            <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center"><Users className="h-5 w-5 text-warning" /></div>
             <div><p className="text-xs text-muted-foreground">Límites de capacidad</p><p className="text-2xl font-bold">{filterByType("capacidad").length}</p></div>
           </CardContent></Card>
         </div>
