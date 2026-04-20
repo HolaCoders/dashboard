@@ -1,26 +1,44 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { reservationsData } from "@/data/reservations";
+import { blocksData } from "@/data/blocks";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { CalendarCheck, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CalendarDays, CalendarRange, CalendarCheck, CalendarX, Ban } from "lucide-react";
 
 const Reportes = () => {
-  const total = reservationsData.length;
-  const aceptadas = reservationsData.filter((r) => r.status === "aceptada").length;
-  const pendientes = reservationsData.filter((r) => r.status === "pendiente").length;
-  const canceladas = reservationsData.filter((r) => r.status === "cancelada").length;
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+
+  // Inicio de semana (lunes)
+  const startOfWeek = new Date(now);
+  const day = (startOfWeek.getDay() + 6) % 7;
+  startOfWeek.setDate(startOfWeek.getDate() - day);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  const parseDate = (s: string) => new Date(s + "T00:00:00");
+
+  const reservasHoy = reservationsData.filter((r) => r.date === today).length;
+  const reservasSemana = reservationsData.filter((r) => parseDate(r.date) >= startOfWeek).length;
+  const reservasMes = reservationsData.filter((r) => parseDate(r.date) >= startOfMonth).length;
+  const reservasAnio = reservationsData.filter((r) => parseDate(r.date) >= startOfYear).length;
+
+  const diasCerrados = blocksData.filter((b) => b.tipo === "dia").length;
 
   const stats = [
-    { label: "Total Reservas", value: total, icon: CalendarCheck, color: "bg-primary text-primary-foreground" },
-    { label: "Aceptadas", value: aceptadas, icon: CheckCircle2, color: "bg-success text-success-foreground" },
-    { label: "Pendientes", value: pendientes, icon: Clock, color: "bg-warning text-warning-foreground" },
-    { label: "Canceladas", value: canceladas, icon: XCircle, color: "bg-destructive text-destructive-foreground" },
+    { label: "Hoy", value: reservasHoy, icon: CalendarCheck, color: "bg-primary text-primary-foreground" },
+    { label: "Esta semana", value: reservasSemana, icon: CalendarRange, color: "bg-success text-success-foreground" },
+    { label: "Este mes", value: reservasMes, icon: CalendarDays, color: "bg-warning text-warning-foreground" },
+    { label: "Este año", value: reservasAnio, icon: CalendarX, color: "bg-secondary text-secondary-foreground" },
   ];
 
   const chartData = [
-    { estado: "Aceptadas", cantidad: aceptadas },
-    { estado: "Pendientes", cantidad: pendientes },
-    { estado: "Canceladas", cantidad: canceladas },
+    { periodo: "Hoy", cantidad: reservasHoy },
+    { periodo: "Semana", cantidad: reservasSemana },
+    { periodo: "Mes", cantidad: reservasMes },
+    { periodo: "Año", cantidad: reservasAnio },
   ];
 
   return (
@@ -28,7 +46,7 @@ const Reportes = () => {
       <div className="max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
-          <p className="text-sm text-muted-foreground mt-1">Resumen general de reservas</p>
+          <p className="text-sm text-muted-foreground mt-1">Resumen de reservas por período</p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -40,7 +58,7 @@ const Reportes = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="text-xs text-muted-foreground">Reservas {stat.label.toLowerCase()}</p>
                 </div>
               </CardContent>
             </Card>
@@ -48,14 +66,26 @@ const Reportes = () => {
         </div>
 
         <Card className="shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-destructive text-destructive-foreground">
+              <Ban className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{diasCerrados}</p>
+              <p className="text-xs text-muted-foreground">Días cerrados registrados</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Reservas por Estado</CardTitle>
+            <CardTitle className="text-base font-semibold">Reservas por Período</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="estado" tick={{ fontSize: 12 }} />
+                <XAxis dataKey="periodo" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{

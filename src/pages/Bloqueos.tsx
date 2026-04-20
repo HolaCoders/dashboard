@@ -15,10 +15,19 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Calendar as CalendarIcon, Clock, Users, Ban } from "lucide-react";
+import { Plus, Trash2, Calendar as CalendarIcon, Clock, Users, Ban, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Block, BlockType, blocksData, generateBlockId } from "@/data/blocks";
+import {
+  Block,
+  BlockType,
+  blocksData,
+  generateBlockId,
+  isReservationFormClosed,
+  setReservationFormClosed,
+} from "@/data/blocks";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState as useReactState } from "react";
 
 const typeLabels: Record<BlockType, string> = {
   horario: "Horario",
@@ -42,7 +51,20 @@ const Bloqueos = () => {
   const { user, hasRole } = useAuth();
   const isAdmin = hasRole("Administrador");
   const [blocks, setBlocks] = useState<Block[]>(blocksData);
+  const [formClosed, setFormClosed] = useReactState(isReservationFormClosed());
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setFormClosed(isReservationFormClosed());
+    window.addEventListener("reservation-form-closed-changed", handler);
+    return () => window.removeEventListener("reservation-form-closed-changed", handler);
+  }, []);
+
+  const toggleFormClosed = (value: boolean) => {
+    setReservationFormClosed(value);
+    setFormClosed(value);
+    toast.success(value ? "Formulario de reservas cerrado" : "Formulario de reservas reabierto");
+  };
   const [tipo, setTipo] = useState<BlockType>("horario");
   const [form, setForm] = useState({
     fecha: "",
