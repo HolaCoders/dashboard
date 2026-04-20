@@ -1,4 +1,4 @@
-import { Home, CalendarCheck, BarChart3, Settings, LogOut, UtensilsCrossed } from "lucide-react";
+import { Home, CalendarCheck, BarChart3, Settings, LogOut, UtensilsCrossed, Table2, Ban } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -11,17 +11,32 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
-  { title: "Inicio", url: "/", icon: Home },
-  { title: "Reservas", url: "/reservas", icon: CalendarCheck },
-  { title: "Reportes", url: "/reportes", icon: BarChart3 },
-  { title: "Configuración", url: "/configuracion", icon: Settings },
+  { title: "Inicio", url: "/", icon: Home, adminOnly: false },
+  { title: "Reservas", url: "/reservas", icon: CalendarCheck, adminOnly: false },
+  { title: "Mesas", url: "/mesas", icon: Table2, adminOnly: false },
+  { title: "Bloqueos", url: "/bloqueos", icon: Ban, adminOnly: true },
+  { title: "Reportes", url: "/reportes", icon: BarChart3, adminOnly: true },
+  { title: "Configuración", url: "/configuracion", icon: Settings, adminOnly: true },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
+  const { user, logout, hasRole } = useAuth();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
+  const isAdmin = hasRole("Administrador");
+
+  const visibleItems = navItems.filter((item) => !item.adminOnly || isAdmin);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -41,7 +56,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="h-11 rounded-lg">
                     <NavLink
@@ -62,20 +77,25 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="px-2 pb-4">
-        {!collapsed && (
+        {!collapsed && user && (
           <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent px-3 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <span className="text-sm font-semibold text-primary">A</span>
+              <span className="text-sm font-semibold text-primary">{user.nombre.charAt(0)}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Administrador</p>
-              <p className="text-xs text-muted-foreground">Super Admin</p>
+              <p className="text-sm font-medium text-foreground truncate">{user.nombre}</p>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 mt-0.5">
+                {user.rol}
+              </Badge>
             </div>
           </div>
         )}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="h-10 gap-3 px-3 text-destructive hover:bg-destructive/10 rounded-lg">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="h-10 gap-3 px-3 text-destructive hover:bg-destructive/10 rounded-lg"
+            >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span className="font-medium">Cerrar Sesión</span>}
             </SidebarMenuButton>
