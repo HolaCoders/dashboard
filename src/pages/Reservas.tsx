@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock } from "lucide-react";
+import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock, Lock } from "lucide-react";
 import { reservationsData, generateCode, type Reservation } from "@/data/reservations";
+import { isReservationFormClosed } from "@/data/blocks";
 import { toast } from "sonner";
 
 const statusStyles: Record<string, string> = {
@@ -37,9 +38,16 @@ const Reservas = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [formClosed, setFormClosed] = useState(isReservationFormClosed());
   const [newReservation, setNewReservation] = useState({
     client: "", phone: "", date: "", time: "", people: 1, table: "Mesa #1", notes: "",
   });
+
+  useEffect(() => {
+    const handler = () => setFormClosed(isReservationFormClosed());
+    window.addEventListener("reservation-form-closed-changed", handler);
+    return () => window.removeEventListener("reservation-form-closed-changed", handler);
+  }, []);
 
   const counts = {
     total: reservations.length,
@@ -89,7 +97,7 @@ const Reservas = () => {
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 rounded-lg shadow-sm">
+              <Button className="gap-2 rounded-lg shadow-sm" disabled={formClosed}>
                 <Plus className="h-4 w-4" />
                 Nueva Reserva
               </Button>
@@ -148,6 +156,16 @@ const Reservas = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {formClosed && (
+          <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4">
+            <Lock className="h-5 w-5 text-destructive shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-destructive">Formulario de reservas cerrado</p>
+              <p className="text-xs text-destructive/80">Las nuevas reservas están deshabilitadas hasta nuevo aviso. Puedes reactivarlo desde el módulo de Bloqueos.</p>
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -41,3 +41,17 @@ export const blocksData: Block[] = [
 export function generateBlockId(): string {
   return `BLK-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
 }
+
+// Estado global simple para el cierre total del formulario de reservas
+const STORAGE_KEY = "catedral_reservation_form_closed";
+
+export function isReservationFormClosed(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(STORAGE_KEY) === "true";
+}
+
+export function setReservationFormClosed(closed: boolean): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, closed ? "true" : "false");
+  window.dispatchEvent(new Event("reservation-form-closed-changed"));
+}
