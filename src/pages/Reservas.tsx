@@ -37,6 +37,8 @@ const Reservas = () => {
   const [reservations, setReservations] = useState<Reservation[]>(reservationsData);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formClosed, setFormClosed] = useState(isReservationFormClosed());
