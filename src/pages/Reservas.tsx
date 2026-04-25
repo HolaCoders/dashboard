@@ -136,7 +136,8 @@ const Reservas = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Hora *</Label>
-                    <Input type="time" value={newReservation.time} onChange={(e) => setNewReservation((p) => ({ ...p, time: e.target.value }))} />
+                    <Input type="time" min="08:00" max="22:00" value={newReservation.time} onChange={(e) => setNewReservation((p) => ({ ...p, time: e.target.value }))} />
+                    <p className="text-xs text-muted-foreground">Horario: 8:00 AM - 10:00 PM (cierre 11:00 PM)</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
