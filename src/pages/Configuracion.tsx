@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Store, Clock, Bell, Table2 } from "lucide-react";
+import { useTables } from "@/hooks/useTables";
+import { useNotificationSettings } from "@/hooks/useNotificationSettings";
+import { TableStatus } from "@/data/tables";
 
 const Configuracion = () => {
   const [restaurant, setRestaurant] = useState({
@@ -24,19 +28,17 @@ const Configuracion = () => {
     daysOpen: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
   });
 
-  const [tables, setTables] = useState(
-    Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `Mesa #${i + 1}`, capacity: [2, 4, 2, 6, 8, 2, 4, 10][i], active: true }))
-  );
-
-  const [notifications, setNotifications] = useState({
-    newReservation: true,
-    cancellation: true,
-    reminder: false,
-    whatsapp: true,
-    email: false,
-  });
+  const { tables, updateTable } = useTables();
+  const { settings: notifications, update: updateNotifications } = useNotificationSettings();
 
   const handleSave = () => toast.success("Configuración guardada exitosamente");
+
+  const toggleTableStatus = (id: number, active: boolean) => {
+    // "active" -> Disponible, "inactive" -> Mantenimiento
+    const estado: TableStatus = active ? "Disponible" : "Mantenimiento";
+    updateTable(id, { estado });
+    toast.success(active ? "Mesa activada" : "Mesa puesta en mantenimiento");
+  };
 
   const toggleDay = (day: string) => {
     setHours((prev) => ({
