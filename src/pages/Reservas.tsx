@@ -74,6 +74,14 @@ const Reservas = () => {
       toast.error("Completa todos los campos requeridos");
       return;
     }
+    const [hours, minutes] = newReservation.time.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    const minMinutes = 8 * 60; // 08:00
+    const maxMinutes = 22 * 60; // 22:00 (última reserva permitida, cierre a las 23:00)
+    if (totalMinutes < minMinutes || totalMinutes > maxMinutes) {
+      toast.error("El horario de reservas es de 8:00 AM a 10:00 PM (cierre a las 11:00 PM)");
+      return;
+    }
     const reservation: Reservation = {
       code: generateCode(),
       ...newReservation,
