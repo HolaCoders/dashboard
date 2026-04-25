@@ -143,34 +143,47 @@ const Configuracion = () => {
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Gestión de Mesas</CardTitle>
-                <CardDescription>Administra las mesas disponibles</CardDescription>
+                <CardDescription>
+                  Activa o pon en mantenimiento cada mesa. Los cambios se sincronizan con el módulo de Mesas.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {tables.map((table) => (
-                    <div key={table.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                          <Table2 className="h-4 w-4 text-muted-foreground" />
+                {tables.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    No hay mesas registradas. Crea mesas desde el módulo de Mesas.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {tables.map((table) => {
+                      const active = table.estado !== "Mantenimiento";
+                      return (
+                        <div key={table.id} className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                              <Table2 className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Mesa #{table.numero}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {table.capacidad} personas · {table.estado}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge variant={active ? "secondary" : "outline"} className="text-xs">
+                              {active ? "Activa" : "Mantenimiento"}
+                            </Badge>
+                            <Switch
+                              checked={active}
+                              disabled={table.estado === "Reservada"}
+                              onCheckedChange={(checked) => toggleTableStatus(table.id, checked)}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{table.name}</p>
-                          <p className="text-xs text-muted-foreground">{table.capacity} personas</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={table.active}
-                        onCheckedChange={(checked) =>
-                          setTables((prev) => prev.map((t) => (t.id === table.id ? { ...t, active: checked } : t)))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Separator className="my-4" />
-                <div className="flex justify-end">
-                  <Button onClick={handleSave}>Guardar Cambios</Button>
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -194,7 +207,7 @@ const Configuracion = () => {
                     </div>
                     <Switch
                       checked={notifications[item.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => setNotifications((p) => ({ ...p, [item.key]: checked }))}
+                      onCheckedChange={(checked) => updateNotifications({ [item.key]: checked })}
                     />
                   </div>
                 ))}
@@ -211,7 +224,7 @@ const Configuracion = () => {
                     </div>
                     <Switch
                       checked={notifications[item.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => setNotifications((p) => ({ ...p, [item.key]: checked }))}
+                      onCheckedChange={(checked) => updateNotifications({ [item.key]: checked })}
                     />
                   </div>
                 ))}
