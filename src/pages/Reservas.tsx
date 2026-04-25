@@ -74,6 +74,14 @@ const Reservas = () => {
       toast.error("Completa todos los campos requeridos");
       return;
     }
+    const [hours, minutes] = newReservation.time.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes;
+    const minMinutes = 8 * 60; // 08:00
+    const maxMinutes = 22 * 60; // 22:00 (última reserva permitida, cierre a las 23:00)
+    if (totalMinutes < minMinutes || totalMinutes > maxMinutes) {
+      toast.error("El horario de reservas es de 8:00 AM a 10:00 PM (cierre a las 11:00 PM)");
+      return;
+    }
     const reservation: Reservation = {
       code: generateCode(),
       ...newReservation,
@@ -128,7 +136,8 @@ const Reservas = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Hora *</Label>
-                    <Input type="time" value={newReservation.time} onChange={(e) => setNewReservation((p) => ({ ...p, time: e.target.value }))} />
+                    <Input type="time" min="08:00" max="22:00" value={newReservation.time} onChange={(e) => setNewReservation((p) => ({ ...p, time: e.target.value }))} />
+                    <p className="text-xs text-muted-foreground">Horario: 8:00 AM - 10:00 PM (cierre 11:00 PM)</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
