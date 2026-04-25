@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { useTables } from "@/hooks/useTables";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Table2, Users } from "lucide-react";
 import { toast } from "sonner";
-import { tablesData, RestaurantTable, TableStatus } from "@/data/tables";
+import { RestaurantTable, TableStatus } from "@/data/tables";
 import { useAuth } from "@/context/AuthContext";
 
 const statusVariants: Record<TableStatus, string> = {
@@ -28,7 +29,7 @@ const statusVariants: Record<TableStatus, string> = {
 const Mesas = () => {
   const { hasRole } = useAuth();
   const isAdmin = hasRole("Administrador");
-  const [tables, setTables] = useState<RestaurantTable[]>(tablesData);
+  const { tables, addTable, updateTable, removeTable } = useTables();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<RestaurantTable | null>(null);
   const [form, setForm] = useState({ numero: "", capacidad: "", estado: "Disponible" as TableStatus });
@@ -61,18 +62,17 @@ const Mesas = () => {
       return;
     }
     if (editing) {
-      setTables((prev) => prev.map((t) => (t.id === editing.id ? { ...t, numero, capacidad, estado: form.estado } : t)));
+      updateTable(editing.id, { numero, capacidad, estado: form.estado });
       toast.success("Mesa actualizada");
     } else {
-      const id = Math.max(0, ...tables.map((t) => t.id)) + 1;
-      setTables((prev) => [...prev, { id, numero, capacidad, estado: form.estado }]);
+      addTable({ numero, capacidad, estado: form.estado });
       toast.success("Mesa creada");
     }
     setOpen(false);
   };
 
   const handleDelete = (id: number) => {
-    setTables((prev) => prev.filter((t) => t.id !== id));
+    removeTable(id);
     toast.success("Mesa eliminada");
   };
 

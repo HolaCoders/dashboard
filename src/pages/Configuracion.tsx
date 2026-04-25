@@ -7,8 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Store, Clock, Bell, Table2 } from "lucide-react";
+import { useTables } from "@/hooks/useTables";
+import { useNotificationSettings } from "@/hooks/useNotificationSettings";
+import { TableStatus } from "@/data/tables";
 
 const Configuracion = () => {
   const [restaurant, setRestaurant] = useState({
@@ -24,19 +28,17 @@ const Configuracion = () => {
     daysOpen: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
   });
 
-  const [tables, setTables] = useState(
-    Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `Mesa #${i + 1}`, capacity: [2, 4, 2, 6, 8, 2, 4, 10][i], active: true }))
-  );
-
-  const [notifications, setNotifications] = useState({
-    newReservation: true,
-    cancellation: true,
-    reminder: false,
-    whatsapp: true,
-    email: false,
-  });
+  const { tables, updateTable } = useTables();
+  const { settings: notifications, update: updateNotifications } = useNotificationSettings();
 
   const handleSave = () => toast.success("Configuración guardada exitosamente");
+
+  const toggleTableStatus = (id: number, active: boolean) => {
+    // "active" -> Disponible, "inactive" -> Mantenimiento
+    const estado: TableStatus = active ? "Disponible" : "Mantenimiento";
+    updateTable(id, { estado });
+    toast.success(active ? "Mesa activada" : "Mesa puesta en mantenimiento");
+  };
 
   const toggleDay = (day: string) => {
     setHours((prev) => ({
@@ -141,34 +143,47 @@ const Configuracion = () => {
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="text-base">Gestión de Mesas</CardTitle>
-                <CardDescription>Administra las mesas disponibles</CardDescription>
+                <CardDescription>
+                  Activa o pon en mantenimiento cada mesa. Los cambios se sincronizan con el módulo de Mesas.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {tables.map((table) => (
-                    <div key={table.id} className="flex items-center justify-between rounded-lg border p-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                          <Table2 className="h-4 w-4 text-muted-foreground" />
+                {tables.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    No hay mesas registradas. Crea mesas desde el módulo de Mesas.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {tables.map((table) => {
+                      const active = table.estado !== "Mantenimiento";
+                      return (
+                        <div key={table.id} className="flex items-center justify-between rounded-lg border p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                              <Table2 className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">Mesa #{table.numero}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {table.capacidad} personas · {table.estado}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Badge variant={active ? "secondary" : "outline"} className="text-xs">
+                              {active ? "Activa" : "Mantenimiento"}
+                            </Badge>
+                            <Switch
+                              checked={active}
+                              disabled={table.estado === "Reservada"}
+                              onCheckedChange={(checked) => toggleTableStatus(table.id, checked)}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{table.name}</p>
-                          <p className="text-xs text-muted-foreground">{table.capacity} personas</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={table.active}
-                        onCheckedChange={(checked) =>
-                          setTables((prev) => prev.map((t) => (t.id === table.id ? { ...t, active: checked } : t)))
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-                <Separator className="my-4" />
-                <div className="flex justify-end">
-                  <Button onClick={handleSave}>Guardar Cambios</Button>
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -192,7 +207,7 @@ const Configuracion = () => {
                     </div>
                     <Switch
                       checked={notifications[item.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => setNotifications((p) => ({ ...p, [item.key]: checked }))}
+                      onCheckedChange={(checked) => updateNotifications({ [item.key]: checked })}
                     />
                   </div>
                 ))}
@@ -209,7 +224,7 @@ const Configuracion = () => {
                     </div>
                     <Switch
                       checked={notifications[item.key as keyof typeof notifications]}
-                      onCheckedChange={(checked) => setNotifications((p) => ({ ...p, [item.key]: checked }))}
+                      onCheckedChange={(checked) => updateNotifications({ [item.key]: checked })}
                     />
                   </div>
                 ))}
