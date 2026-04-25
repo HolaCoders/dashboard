@@ -65,7 +65,8 @@ const Reservas = () => {
       r.phone.includes(searchQuery) ||
       r.code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesDate = !dateFilter || r.date === dateFilter;
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const handleCreate = () => {
