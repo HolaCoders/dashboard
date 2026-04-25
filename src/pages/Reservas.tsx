@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock, Lock } from "lucide-react";
+import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock, Lock, List, CalendarDays, X } from "lucide-react";
 import { reservationsData, generateCode, type Reservation } from "@/data/reservations";
 import { isReservationFormClosed } from "@/data/blocks";
 import { toast } from "sonner";
+import { ReservationsCalendar } from "@/components/reservations/ReservationsCalendar";
 
 const statusStyles: Record<string, string> = {
   aceptada: "bg-success/10 text-success border-success/20",
@@ -36,6 +37,8 @@ const Reservas = () => {
   const [reservations, setReservations] = useState<Reservation[]>(reservationsData);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formClosed, setFormClosed] = useState(isReservationFormClosed());
@@ -62,7 +65,8 @@ const Reservas = () => {
       r.phone.includes(searchQuery) ||
       r.code.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesDate = !dateFilter || r.date === dateFilter;
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   const handleCreate = () => {
@@ -182,15 +186,32 @@ const Reservas = () => {
           ))}
         </div>
 
-        {/* Table */}
+        {/* Filters + content */}
         <div className="bg-card rounded-xl border shadow-sm">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 border-b">
-            <div className="relative flex-1">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 p-4 border-b">
+            <div className="relative flex-1 min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por cliente, teléfono o código..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 bg-muted/50 border-0 rounded-lg" />
             </div>
+            <div className="relative">
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full lg:w-[180px] bg-muted/50 border-0 rounded-lg pr-8"
+              />
+              {dateFilter && (
+                <button
+                  onClick={() => setDateFilter("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-muted text-muted-foreground"
+                  aria-label="Limpiar fecha"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px] bg-muted/50 border-0 rounded-lg"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full lg:w-[180px] bg-muted/50 border-0 rounded-lg"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="pendiente">Pendiente</SelectItem>
@@ -198,65 +219,92 @@ const Reservas = () => {
                 <SelectItem value="cancelada">Cancelada</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center bg-muted/50 rounded-lg p-1 shrink-0">
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 gap-1.5 rounded-md"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-3.5 w-3.5" />
+                <span className="text-xs">Lista</span>
+              </Button>
+              <Button
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                size="sm"
+                className="h-8 gap-1.5 rounded-md"
+                onClick={() => setViewMode("calendar")}
+              >
+                <CalendarDays className="h-3.5 w-3.5" />
+                <span className="text-xs">Calendario</span>
+              </Button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Código</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Cliente</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Teléfono</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Fecha</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Hora</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Personas</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Mesa</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Estado</TableHead>
-                  <TableHead className="text-xs font-semibold uppercase text-muted-foreground text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No se encontraron reservas</TableCell></TableRow>
-                ) : (
-                  filtered.map((r) => (
-                    <TableRow key={r.code} className="hover:bg-muted/30">
-                      <TableCell className="font-mono text-xs text-muted-foreground">{r.code}</TableCell>
-                      <TableCell className="font-medium">{r.client}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.phone}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.date}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.time}</TableCell>
-                      <TableCell className="text-center">{r.people}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.table}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={`capitalize text-xs ${statusStyles[r.status]}`}>{r.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {r.status === "pendiente" && (
-                            <>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10" onClick={() => handleStatusChange(r.code, "aceptada")}>
-                                <CheckCircle2 className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleStatusChange(r.code, "cancelada")}>
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10">
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => setSelectedReservation(r)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {viewMode === "calendar" ? (
+            <ReservationsCalendar
+              reservations={filtered}
+              onSelectReservation={setSelectedReservation}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Código</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Cliente</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Teléfono</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Fecha</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Hora</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Personas</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Mesa</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground">Estado</TableHead>
+                    <TableHead className="text-xs font-semibold uppercase text-muted-foreground text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.length === 0 ? (
+                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No se encontraron reservas</TableCell></TableRow>
+                  ) : (
+                    filtered.map((r) => (
+                      <TableRow key={r.code} className="hover:bg-muted/30">
+                        <TableCell className="font-mono text-xs text-muted-foreground">{r.code}</TableCell>
+                        <TableCell className="font-medium">{r.client}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.phone}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.date}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.time}</TableCell>
+                        <TableCell className="text-center">{r.people}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.table}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`capitalize text-xs ${statusStyles[r.status]}`}>{r.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {r.status === "pendiente" && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10" onClick={() => handleStatusChange(r.code, "aceptada")}>
+                                  <CheckCircle2 className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleStatusChange(r.code, "cancelada")}>
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success/10">
+                              <MessageCircle className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => setSelectedReservation(r)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
 
         {/* Detail dialog */}
