@@ -14,10 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock, Lock } from "lucide-react";
+import { Search, Plus, Eye, MessageCircle, CheckCircle2, XCircle, CalendarCheck, Clock, Lock, List, CalendarDays, X } from "lucide-react";
 import { reservationsData, generateCode, type Reservation } from "@/data/reservations";
 import { isReservationFormClosed } from "@/data/blocks";
 import { toast } from "sonner";
+import { ReservationsCalendar } from "@/components/reservations/ReservationsCalendar";
 
 const statusStyles: Record<string, string> = {
   aceptada: "bg-success/10 text-success border-success/20",
